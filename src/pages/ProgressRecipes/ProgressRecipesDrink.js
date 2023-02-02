@@ -6,6 +6,7 @@ import shareIcon from '../../images/shareIcon.svg';
 import favIconEnabled from '../../images/blackHeartIcon.svg';
 import { /* loadFromLS */ saveToLS, getDrinksDetails } from '../../services';
 import filterFood from '../../utils/filterDetailsRecipes';
+import favIconDisabled from '../../images/whiteHeartIcon.svg';
 
 import '../../styles/pages/Container.css';
 
@@ -27,10 +28,13 @@ class ProgressRecipesDrink extends Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleRequestDrink = this.handleRequestDrink.bind(this);
     this.checkExistIngredientArrRecipes = this.checkExistIngredientArrRecipes.bind(this);
+    this.recoverFavorite = this.recoverFavorite.bind(this);
+    this.favoriteLs = this.favoriteLs.bind(this);
   }
 
   componentDidMount() {
     this.handleRequestDrink();
+    this.recoverFavorite();
   }
 
   handleRequestDrink() {
@@ -81,6 +85,55 @@ class ProgressRecipesDrink extends Component {
     saveToLS('inProgressRecipe', { meals, cocktails });
   }
 
+  favoriteLs() {
+    const {
+      idDrink,
+      strDrinkThumb,
+      strDrink,
+      strCategory,
+      isFavorite,
+      strAlcoholic,
+    } = this.state;
+
+    const favorites = JSON.parse(localStorage.getItem('favoriteRecipes'));
+    const {
+      match: {
+        params: { id },
+      },
+    } = this.props;
+    const objModel = [{
+      id: idDrink,
+      type: '',
+      area: '',
+      category: strCategory,
+      alcoholicOrNot: strAlcoholic,
+      name: strDrink,
+      image: strDrinkThumb,
+    }];
+
+    if (isFavorite) {
+      const removeFavorite = favorites.filter((item) => item.id !== id);
+      console.log(removeFavorite);
+    } else {
+      console.log(favorites);
+      localStorage.setItem('favoriteRecipes', JSON.stringify([...favorites, ...objModel]));
+    }
+  }
+
+  recoverFavorite() {
+    const {
+      match: {
+        params: { id },
+      },
+    } = this.props;
+    const favorites = JSON.parse(localStorage.getItem('favoriteRecipes'));
+    const verify = favorites.some((item) => item.id === id);
+    this.setState((state) => ({
+      ...state,
+      isFavorite: verify,
+    }));
+  }
+
   checkExistIngredientArrRecipes(idDrink, ingredient, cocktails, state) {
     let dataSetState = cocktails[idDrink];
     const checkExist = dataSetState.some((element) => element === ingredient);
@@ -110,6 +163,7 @@ class ProgressRecipesDrink extends Component {
       strInstructions,
       ingredients,
       measures,
+      isFavorite,
     } = this.state;
 
     return (
@@ -136,12 +190,17 @@ class ProgressRecipesDrink extends Component {
             <p id="link" style={ { display: 'none' } }>
               Link copiado!
             </p>
-            <button type="button" className="action-button">
+            <button
+              type="button"
+              className="action-button"
+              onClick={ () => this.favoriteLS }
+            >
               <img
-                src={ favIconEnabled }
+                src={ isFavorite ? favIconEnabled : favIconDisabled }
                 alt="favorite"
                 data-testid="favorite-btn"
                 className="favorite-icon"
+
               />
             </button>
           </div>
